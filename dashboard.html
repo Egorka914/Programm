@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ремонт ПК — Личный кабинет</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="dashboard.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Ремонт ПК</h1>
+      <p>Система управления заявками</p>
+    </div>
+
+    <div class="welcome-message" id="welcomeMessage"></div>
+
+    <div id="tabsContainer"></div>
+
+    <div id="content">
+      <div id="taskFormContainer" class="mb-6"></div>
+      <div id="tasks" class="space-y-4"></div>
+      <div id="adminPanel" class="mt-6"></div>
+    </div>
+
+    <div class="form-container mt-6">
+      <button id="installBtn" class="btn hidden w-full">Установить приложение</button>
+      <button id="logoutBtn" class="btn btn-outline w-full mt-2">Выйти из системы</button>
+    </div>
+  </div>
+
+  <div id="notification" class="notification"></div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    
+    const SUPABASE_URL = "https://rhmyvdpgpupraccyoaqs.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJobXl2ZHBncHVwcmFjY3lvYXFzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzU3NzAyNiwiZXhwIjoyMDczMTUzMDI2fQ.hJUDL59uIdblNnZA46OPV27pj3L-3ffYkgZPhx6lCmg";
+    
+    window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await window.supabase.auth.signOut();
+      window.location.href = 'index.html';
+    });
+
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.classList.remove('hidden');
+    });
+    installBtn.addEventListener('click', async () => {
+      installBtn.classList.add('hidden');
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt = null;
+      }
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+    }
+  </script>
+</body>
+</html>

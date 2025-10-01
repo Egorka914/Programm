@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ремонт ПК — Вход в систему</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="auth.js"></script>
+</head>
+<body>
+  <div class="header">
+    <h1>Ремонт ПК</h1>
+    <p>Профессиональный сервис по ремонту компьютеров</p>
+  </div>
+
+  <div class="container">
+    <div class="form-container">
+      <h1 class="form-title">Вход в систему</h1>
+
+      <form id="loginForm">
+        <div class="input-group">
+          <label for="email" class="label">Email</label>
+          <input type="email" id="email" placeholder="Введите ваш email" class="input" required>
+        </div>
+        
+        <div class="input-group">
+          <label for="password" class="label">Пароль</label>
+          <input type="password" id="password" placeholder="Введите ваш пароль" class="input" required>
+        </div>
+        
+        <button type="submit" class="btn w-full" id="loginBtn">
+          <span id="loginBtnText">Войти в систему</span>
+          <div id="loginBtnSpinner" class="loading-spinner hidden"></div>
+        </button>
+      </form>
+
+      <p class="text-center mt-6 text-gray-600">
+        Нет аккаунта?
+        <a href="#" id="signupLink" class="text-primary hover:underline font-medium">Зарегистрироваться</a>
+      </p>
+    </div>
+  </div>
+
+  <div id="notification" class="notification"></div>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("Service Worker зарегистрирован"))
+        .catch((err) => console.error("Ошибка регистрации SW:", err));
+    }
+  </script>
+</body>
+</html>
