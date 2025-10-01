@@ -8,6 +8,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4f46e5">
   <link rel="stylesheet" href="style.css">
+  <script type="module" src="auth.js"></script>
 </head>
 <body class="p-6 bg-gray-50">
   <div class="header">
@@ -33,7 +34,7 @@
         
         <button type="submit" class="btn w-full" id="loginBtn">
           <span id="loginBtnText">Войти в систему</span>
-          <span id="loginBtnSpinner" class="loading-spinner hidden"></span>
+          <span id="loginBtnSpinner" class="loading-spinner" style="display: none;"></span>
         </button>
       </form>
 
@@ -45,18 +46,5 @@
   </div>
 
   <div id="notification" class="notification"></div>
-
-  <!-- Загружаем Supabase через глобальный скрипт -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="auth-simple.js"></script>
-  
-  <script>
-    // Условная регистрация Service Worker только для HTTPS
-    if (window.location.protocol === 'https:' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("Service Worker зарегистрирован"))
-        .catch((err) => console.error("Ошибка регистрации SW:", err));
-    }
-  </script>
 </body>
 </html>
