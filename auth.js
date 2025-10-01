@@ -12,7 +12,6 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 function showNotification(message, type = 'info') {
   let notification = document.getElementById('notification');
   if (!notification) {
-    // Создаем уведомление если его нет
     notification = document.createElement('div');
     notification.id = 'notification';
     notification.className = 'notification';
@@ -27,150 +26,156 @@ function showNotification(message, type = 'info') {
   }, 4000);
 }
 
-// УПРОЩЕННАЯ функция для отображения/скрытия загрузки
+// ПРОСТАЯ функция для отображения/скрытия загрузки
 function setLoading(isLoading) {
   const button = document.getElementById("loginBtn");
-  if (!button) return;
-  
-  const text = document.getElementById("loginBtnText");
-  const spinner = document.getElementById("loginBtnSpinner");
+  if (!button) {
+    console.log("Кнопка loginBtn не найдена");
+    return;
+  }
   
   if (isLoading) {
-    if (text) text.style.display = 'none';
-    if (spinner) spinner.style.display = 'inline-block';
+    button.innerHTML = '<div class="loading-spinner"></div> Загрузка...';
     button.disabled = true;
-    button.classList.add('loading');
   } else {
-    if (text) text.style.display = 'inline-block';
-    if (spinner) spinner.style.display = 'none';
+    button.innerHTML = 'Войти в систему';
     button.disabled = false;
-    button.classList.remove('loading');
   }
 }
 
-const form = document.getElementById("loginForm");
-const signupLink = document.getElementById("signupLink");
+// Ждем полной загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById("loginForm");
+  const signupLink = document.getElementById("signupLink");
 
-if (form) {
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    const email = document.getElementById("email")?.value.trim();
-    const password = document.getElementById("password")?.value.trim();
-    
-    if (!email || !password) { 
-      showNotification("Введите email и пароль", "error");
-      setLoading(false);
-      return; 
-    }
+  console.log("DOM загружен, форма:", form, "ссылка:", signupLink);
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      console.log("Форма отправлена");
+      setLoading(true);
       
-      if (error) { 
-        showNotification("Ошибка входа: " + error.message, "error");
-        console.error(error); 
+      const email = document.getElementById("email")?.value.trim();
+      const password = document.getElementById("password")?.value.trim();
+      
+      if (!email || !password) { 
+        showNotification("Введите email и пароль", "error");
         setLoading(false);
         return; 
       }
-      
-      showNotification("Вход выполнен успешно!", "success");
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 1000);
-    } catch (err) {
-      showNotification("Ошибка сети: " + err.message, "error");
-      setLoading(false);
-    }
-  });
-}
-
-if (signupLink) {
-  signupLink.addEventListener("click", async (e) => {
-    e.preventDefault();
-    
-    // Создаем модальное окно для регистрации
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    `;
-    
-    modal.innerHTML = `
-      <div style="background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 400px;">
-        <h2 style="margin-bottom: 20px; text-align: center;">Регистрация</h2>
-        <form id="signupForm">
-          <div class="input-group">
-            <label for="regEmail" class="label">Email</label>
-            <input type="email" id="regEmail" placeholder="Введите email" class="input" required>
-          </div>
-          <div class="input-group">
-            <label for="regPassword" class="label">Пароль</label>
-            <input type="password" id="regPassword" placeholder="Не менее 6 символов" class="input" required>
-          </div>
-          <div class="input-group">
-            <label for="regName" class="label">Ваше имя</label>
-            <input type="text" id="regName" placeholder="Будет отображаться в системе" class="input" required>
-          </div>
-          <div style="display: flex; gap: 12px; margin-top: 20px;">
-            <button type="button" id="cancelSignup" class="btn btn-outline" style="flex: 1;">Отмена</button>
-            <button type="submit" class="btn" style="flex: 1;">Зарегистрироваться</button>
-          </div>
-        </form>
-      </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Обработчики для модального окна
-    document.getElementById('cancelSignup').addEventListener('click', () => {
-      document.body.removeChild(modal);
-    });
-    
-    document.getElementById('signupForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const email = document.getElementById("regEmail")?.value.trim();
-      const password = document.getElementById("regPassword")?.value.trim();
-      const full_name = document.getElementById("regName")?.value.trim();
-
-      if (!email || !password || !full_name) {
-        showNotification("Заполните все поля", "error");
-        return;
-      }
-      
-      if (password.length < 6) {
-        showNotification("Пароль должен содержать не менее 6 символов", "error");
-        return;
-      }
 
       try {
-        const { data, error } = await supabase.auth.signUp({
-          email, 
-          password,
-          options: { data: { full_name } }
-        });
-
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        
         if (error) { 
-          showNotification("Ошибка регистрации: " + error.message, "error"); 
+          showNotification("Ошибка входа: " + error.message, "error");
           console.error(error); 
+          setLoading(false);
           return; 
         }
         
-        showNotification("Регистрация успешна! Проверьте почту для подтверждения.", "success");
-        document.body.removeChild(modal);
+        showNotification("Вход выполнен успешно!", "success");
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 1000);
       } catch (err) {
         showNotification("Ошибка сети: " + err.message, "error");
+        setLoading(false);
       }
     });
-  });
-}
+  } else {
+    console.error("Форма loginForm не найдена!");
+  }
+
+  if (signupLink) {
+    signupLink.addEventListener("click", async (e) => {
+      e.preventDefault();
+      
+      // Создаем модальное окно для регистрации
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      `;
+      
+      modal.innerHTML = `
+        <div style="background: white; padding: 24px; border-radius: 12px; width: 90%; max-width: 400px;">
+          <h2 style="margin-bottom: 20px; text-align: center;">Регистрация</h2>
+          <form id="signupForm">
+            <div class="input-group">
+              <label for="regEmail" class="label">Email</label>
+              <input type="email" id="regEmail" placeholder="Введите email" class="input" required>
+            </div>
+            <div class="input-group">
+              <label for="regPassword" class="label">Пароль</label>
+              <input type="password" id="regPassword" placeholder="Не менее 6 символов" class="input" required>
+            </div>
+            <div class="input-group">
+              <label for="regName" class="label">Ваше имя</label>
+              <input type="text" id="regName" placeholder="Будет отображаться в системе" class="input" required>
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+              <button type="button" id="cancelSignup" class="btn btn-outline" style="flex: 1;">Отмена</button>
+              <button type="submit" class="btn" style="flex: 1;">Зарегистрироваться</button>
+            </div>
+          </form>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      
+      // Обработчики для модального окна
+      document.getElementById('cancelSignup').addEventListener('click', () => {
+        document.body.removeChild(modal);
+      });
+      
+      document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById("regEmail")?.value.trim();
+        const password = document.getElementById("regPassword")?.value.trim();
+        const full_name = document.getElementById("regName")?.value.trim();
+
+        if (!email || !password || !full_name) {
+          showNotification("Заполните все поля", "error");
+          return;
+        }
+        
+        if (password.length < 6) {
+          showNotification("Пароль должен содержать не менее 6 символов", "error");
+          return;
+        }
+
+        try {
+          const { data, error } = await supabase.auth.signUp({
+            email, 
+            password,
+            options: { data: { full_name } }
+          });
+
+          if (error) { 
+            showNotification("Ошибка регистрации: " + error.message, "error"); 
+            console.error(error); 
+            return; 
+          }
+          
+          showNotification("Регистрация успешна! Проверьте почту для подтверждения.", "success");
+          document.body.removeChild(modal);
+        } catch (err) {
+          showNotification("Ошибка сети: " + err.message, "error");
+        }
+      });
+    });
+  } else {
+    console.error("Ссылка signupLink не найдена!");
+  }
+});
