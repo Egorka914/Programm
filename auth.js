@@ -1,139 +1,127 @@
-
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
 // === ЗАМЕНИТЕ на ваши значения ===
 const SUPABASE_URL = "https://rhmyvdpgpupraccyoaqs.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJobXl2ZHBncHVwcmFjY3lvYXFzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzU3NzAyNiwiZXhwIjoyMDczMTUzMDI2fQ.hJUDL59uIdblNnZA46OPV27pj3L-3ffYkgZPhx6lCmg";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 // ==================================
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Упрощенная функция уведомлений
+// Утилита уведомлений
 function showNotification(message, type = 'info') {
-  alert(message); // Временно используем alert для простоты
+  const notification = document.getElementById('notification');
+  if (!notification) return;
+  
+  notification.textContent = message;
+  notification.className = `notification ${type} show`;
+  
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, 4000);
 }
 
-// ОЧЕНЬ ПРОСТАЯ функция загрузки - без classList
-function setLoading(isLoading) {
-  const button = document.getElementById("loginBtn");
-  if (!button) {
-    console.error("Кнопка loginBtn не найдена!");
-    return;
-  }
+// Загрузка кнопки
+function setLoading(buttonId, isLoading) {
+  const button = document.getElementById(buttonId);
+  if (!button) return;
   
-  if (isLoading) {
-    button.textContent = "Загрузка...";
-    button.disabled = true;
-  } else {
-    button.textContent = "Войти в систему";
-    button.disabled = false;
-  }
+  const text = button.querySelector('.btn-text');
+  const spinner = button.querySelector('.btn-spinner');
+
+  if (text) text.classList.toggle('hidden', isLoading);
+  if (spinner) spinner.classList.toggle('hidden', !isLoading);
+
+  button.disabled = isLoading;
 }
 
-// Основной код
-console.log("Скрипт auth.js загружен");
+// Вход
+const form = document.getElementById("loginForm");
+if (form) {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setLoading('loginBtn', true);
+    
+    const email = document.getElementById("email")?.value.trim();
+    const password = document.getElementById("password")?.value.trim();
+    
+    if (!email || !password) { 
+      showNotification("Введите email и пароль", "error");
+      setLoading('loginBtn', false);
+      return; 
+    }
 
-// Ждем полной загрузки DOM
-document.addEventListener('DOMContentLoaded', function() {
-  console.log("DOM полностью загружен");
-  
-  const form = document.getElementById("loginForm");
-  const signupLink = document.getElementById("signupLink");
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    
+    if (error) { 
+      showNotification("Ошибка входа: " + error.message, "error");
+      console.error(error); 
+      setLoading('loginBtn', false);
+      return; 
+    }
+    
+    showNotification("Вход выполнен успешно!", "success");
+    setTimeout(() => window.location.href = "dashboard.html", 1000);
+  });
+}
 
-  console.log("Найдена форма:", !!form);
-  console.log("Найдена ссылка регистрации:", !!signupLink);
+// Регистрация
+const signupLink = document.getElementById("signupLink");
+if (signupLink) {
+  signupLink.addEventListener("click", (e) => {
+    e.preventDefault();
 
-  if (form) {
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      console.log("Обработка отправки формы");
-      
-      setLoading(true);
-      
-      const email = document.getElementById("email");
-      const password = document.getElementById("password");
-      
-      if (!email || !password) {
-        showNotification("Поля email и пароль не найдены");
-        setLoading(false);
-        return;
-      }
-      
-      const emailValue = email.value.trim();
-      const passwordValue = password.value.trim();
-      
-      if (!emailValue || !passwordValue) { 
-        showNotification("Введите email и пароль");
-        setLoading(false);
-        return; 
-      }
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <h2>Регистрация</h2>
+        <form id="signupForm">
+          <input type="email" id="regEmail" placeholder="Email" required>
+          <input type="password" id="regPassword" placeholder="Пароль (6+ символов)" required>
+          <input type="text" id="regName" placeholder="Ваше имя" required>
+          <div style="display: flex; gap: 12px; margin-top: 12px;">
+            <button type="button" id="cancelSignup">Отмена</button>
+            <button type="submit">Зарегистрироваться</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
 
-      try {
-        console.log("Попытка входа с email:", emailValue);
-        const { data, error } = await supabase.auth.signInWithPassword({ 
-          email: emailValue, 
-          password: passwordValue 
-        });
-        
-        if (error) { 
-          showNotification("Ошибка входа: " + error.message);
-          console.error("Ошибка Supabase:", error); 
-          setLoading(false);
-          return; 
-        }
-        
-        console.log("Вход успешен, данные:", data);
-        showNotification("Вход выполнен успешно!");
-        setTimeout(() => {
-          window.location.href = "dashboard.html";
-        }, 1000);
-      } catch (err) {
-        showNotification("Ошибка сети: " + err.message);
-        console.error("Ошибка сети:", err);
-        setLoading(false);
-      }
+    document.getElementById('cancelSignup').addEventListener('click', () => {
+      document.body.removeChild(modal);
     });
-  } else {
-    console.error("Форма loginForm не найдена в DOM!");
-  }
 
-  if (signupLink) {
-    signupLink.addEventListener("click", async (e) => {
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
-      const email = prompt("Введите email:");
-      const password = prompt("Введите пароль (мин. 6 символов):");
-      const full_name = prompt("Введите ваше имя:");
-      
+
+      const email = document.getElementById("regEmail")?.value.trim();
+      const password = document.getElementById("regPassword")?.value.trim();
+      const full_name = document.getElementById("regName")?.value.trim();
+
       if (!email || !password || !full_name) {
-        showNotification("Все поля обязательны для заполнения");
+        showNotification("Заполните все поля", "error");
         return;
       }
-      
       if (password.length < 6) {
-        showNotification("Пароль должен содержать не менее 6 символов");
+        showNotification("Пароль должен быть 6+ символов", "error");
         return;
       }
 
-      try {
-        const { data, error } = await supabase.auth.signUp({
-          email, 
-          password,
-          options: { data: { full_name } }
-        });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name } }
+      });
 
-        if (error) { 
-          showNotification("Ошибка регистрации: " + error.message); 
-          console.error(error); 
-          return; 
-        }
-        
-        showNotification("Регистрация успешна! Проверьте почту для подтверждения.");
-      } catch (err) {
-        showNotification("Ошибка сети: " + err.message);
+      if (error) {
+        showNotification("Ошибка регистрации: " + error.message, "error");
+        console.error(error);
+        return;
       }
+
+      showNotification("Регистрация успешна! Проверьте почту для подтверждения.", "success");
+      document.body.removeChild(modal);
     });
-  } else {
-    console.error("Ссылка signupLink не найдена в DOM!");
-  }
-});
+  });
+}
