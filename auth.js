@@ -2,126 +2,42 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 // === ЗАМЕНИТЕ на ваши значения ===
 const SUPABASE_URL = "https://rhmyvdpgpupraccyoaqs.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJobXl2ZHBncHVwcmFjY3lvYXFzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzU3NzAyNiwiZXhwIjoyMDczMTUzMDI2fQ.hJUDL59uIdblNnZA46OPV27pj3L-3ffYkgZPhx6lCmg";
 // ==================================
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Утилита уведомлений
-function showNotification(message, type = 'info') {
-  const notification = document.getElementById('notification');
-  if (!notification) return;
-  
-  notification.textContent = message;
-  notification.className = `notification ${type} show`;
-  
-  setTimeout(() => {
-    notification.classList.remove('show');
-  }, 4000);
-}
-
-// Загрузка кнопки
-function setLoading(buttonId, isLoading) {
-  const button = document.getElementById(buttonId);
-  if (!button) return;
-  
-  const text = button.querySelector('.btn-text');
-  const spinner = button.querySelector('.btn-spinner');
-
-  if (text) text.classList.toggle('hidden', isLoading);
-  if (spinner) spinner.classList.toggle('hidden', !isLoading);
-
-  button.disabled = isLoading;
-}
-
-// Вход
 const form = document.getElementById("loginForm");
+const signupLink = document.getElementById("signupLink");
+
 if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    setLoading('loginBtn', true);
-    
-    const email = document.getElementById("email")?.value.trim();
-    const password = document.getElementById("password")?.value.trim();
-    
-    if (!email || !password) { 
-      showNotification("Введите email и пароль", "error");
-      setLoading('loginBtn', false);
-      return; 
-    }
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    if (!email || !password) { alert("Введите email и пароль"); return; }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    
-    if (error) { 
-      showNotification("Ошибка входа: " + error.message, "error");
-      console.error(error); 
-      setLoading('loginBtn', false);
-      return; 
-    }
-    
-    showNotification("Вход выполнен успешно!", "success");
-    setTimeout(() => window.location.href = "dashboard.html", 1000);
+    if (error) { alert("Ошибка входа: " + error.message); console.error(error); return; }
+    window.location.href = "dashboard.html";
   });
 }
 
-// Регистрация
-const signupLink = document.getElementById("signupLink");
 if (signupLink) {
-  signupLink.addEventListener("click", (e) => {
+  signupLink.addEventListener("click", async (e) => {
     e.preventDefault();
+    const email = prompt("Введите email");
+    const password = prompt("Введите пароль (мин. 6 символов)");
+    const full_name = prompt("Введите ваше имя (будет отображаться)");
 
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-      <div class="modal-content">
-        <h2>Регистрация</h2>
-        <form id="signupForm">
-          <input type="email" id="regEmail" placeholder="Email" required>
-          <input type="password" id="regPassword" placeholder="Пароль (6+ символов)" required>
-          <input type="text" id="regName" placeholder="Ваше имя" required>
-          <div style="display: flex; gap: 12px; margin-top: 12px;">
-            <button type="button" id="cancelSignup">Отмена</button>
-            <button type="submit">Зарегистрироваться</button>
-          </div>
-        </form>
-      </div>
-    `;
-    document.body.appendChild(modal);
+    if (!email || !password) return alert("Отмена регистрации");
 
-    document.getElementById('cancelSignup').addEventListener('click', () => {
-      document.body.removeChild(modal);
+    const { data, error } = await supabase.auth.signUp({
+      email, password,
+      options: { data: { full_name } }
     });
 
-    document.getElementById('signupForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const email = document.getElementById("regEmail")?.value.trim();
-      const password = document.getElementById("regPassword")?.value.trim();
-      const full_name = document.getElementById("regName")?.value.trim();
-
-      if (!email || !password || !full_name) {
-        showNotification("Заполните все поля", "error");
-        return;
-      }
-      if (password.length < 6) {
-        showNotification("Пароль должен быть 6+ символов", "error");
-        return;
-      }
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name } }
-      });
-
-      if (error) {
-        showNotification("Ошибка регистрации: " + error.message, "error");
-        console.error(error);
-        return;
-      }
-
-      showNotification("Регистрация успешна! Проверьте почту для подтверждения.", "success");
-      document.body.removeChild(modal);
-    });
+    if (error) { alert("Ошибка регистрации: " + error.message); console.error(error); return; }
+    alert("Регистрация успешна. Проверьте почту для подтверждения (если включено).");
   });
 }
